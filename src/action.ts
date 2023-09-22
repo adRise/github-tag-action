@@ -33,6 +33,7 @@ export default async function main() {
   const shouldFetchAllTags = core.getInput('fetch_all_tags');
   const commitSha = core.getInput('commit_sha');
 
+
   let mappedReleaseRules;
   if (customReleaseRules) {
     mappedReleaseRules = mapCustomReleaseRules(customReleaseRules);
@@ -57,15 +58,17 @@ export default async function main() {
     .some((branch) => currentBranch.match(branch));
   const isPreReleaseBranch = preReleaseBranches
     .split(',')
+    .filter(e => e.length != 0)
     .some((branch) => currentBranch.match(branch));
   const isPullRequest = isPr(GITHUB_REF);
-  const isPrerelease = !isReleaseBranch && !isPullRequest && isPreReleaseBranch;
+  const isPrerelease = !isReleaseBranch && !isPullRequest;
 
+  const idSuffix = (isPrerelease && !isPreReleaseBranch) ? ('-' + commitRef.substring(0, 6)) : '';
   // Sanitize identifier according to
   // https://semver.org/#backusnaur-form-grammar-for-valid-semver-versions
   const identifier = (
     appendToPreReleaseTag ? appendToPreReleaseTag : currentBranch
-  ).replace(/[^a-zA-Z0-9-]/g, '-');
+  ).replace(/[^a-zA-Z0-9-]/g, '-') + idSuffix;
 
   const prefixRegex = new RegExp(`^${tagPrefix}`);
 
